@@ -5,8 +5,8 @@ Created on Sun Jun 28 01:51:20 2020
 @author: admin
 """
 import numpy as np
-#from matplotlib import pyplot as plt
-#from statsmodels.tsa.stattools import acf as acf
+import numpy.fft
+from lfdfiles import SimfcsB64 as lfd
 
 #==============================================================================
 # Con este programa podes extraer un pixel del huge vector. Ademas podes
@@ -117,31 +117,76 @@ def G_PCF2(Matriz,R0,R1,tau_max=80):
     G=numerador/denominador-1
     return G 
 
-#retrazo=1000
-#i=1
-#intensidad2=np.loadtxt('vector de intensidades 20200626 3.csv',delimiter=',')
-#intensidad1=np.loadtxt('vector de intensidades 20200626 3.csv',delimiter=',')
-#while i<=retrazo:
-#    intensidad1=np.delete(intensidad1,-1)
-#    intensidad1=np.append(intensidad2[-i],intensidad1)
-#    i=i+1
-#
-#R0=0
-#R1=1
-#size=8
-#tiempo_pixel=10**(-5)
-#tiempo_imagen=size**2*tiempo_pixel
-#tau_max=5000
-#frames=25000 
-#
-#G=G_PCF([intensidad2,intensidad1],R0,R1,tau_max=tau_max)
-#
-#plt.figure('al revez')
-#plt.plot(np.linspace(0,len(G)-1,len(G))*tiempo_imagen,G,'.',label='Paircorr')
-#r=retrazo*tiempo_imagen
-#plt.plot([r,r],[0,max(G)],'g',label='Retrazo= %s s' %(r))
-#plt.xscale('log')
-#plt.ylabel('PCF')
-#plt.xlabel('tiempo (s)')
-#plt.grid()
-#plt.legend()
+#==============================================================================
+# Defino la funcion teorica de autocorrelacion
+#==============================================================================
+def G_teorica3D(N,alpha,D,w0,wz,t):
+    G=(alpha/N)*(1+4*D*t/w0**2)**(-1)*(1+(w0/wz)**2*t*4*D/w0**2)**(-0.5)
+    return G
+def G_teorica2D(N,alpha,D,w0,t):
+    G=(alpha/N)*(1+4*D*t/w0**2)**(-1)
+    return G
+
+#==============================================================================
+# Correlacion de pares usando FFT de forma circular
+#==============================================================================
+def corrcircular_fft(a, b):
+    """Return circular correlation of two arrays using DFT."""
+    size = a.size
+    # forward DFT
+    a = numpy.fft.rfft(a)
+    b = numpy.fft.rfft(b)
+    # multiply by complex conjugate
+    c = a.conj() * b
+    # reverse DFT
+    c = numpy.fft.irfft(c)    
+    # positive delays only
+    c = c[:size // 2]   
+    # normalize with the averages of a and b
+    #   c is already normalized by size
+    #   the 0th value of the DFT contains the sum of the signal
+    c /= a[0].real * b[0].real / size
+    c -= 1.0
+    return c
+
+#==============================================================================
+# Correlacion de pares usando FFT de forma lineal
+#==============================================================================
+def corrlineal_fft(a, b):
+    """Return linear correlation of two arrays using DFT."""
+    size = a.size    
+    # subtract mean and pad with zeros to twice the size
+    a_mean = a.mean()
+    b_mean = b.mean()
+    a = numpy.pad(a-a_mean, a.size//2, mode='constant')
+    b = numpy.pad(b-b_mean, b.size//2, mode='constant')
+    # forward DFT
+    a = numpy.fft.rfft(a)
+    b = numpy.fft.rfft(b)
+    # multiply by complex conjugate
+    c = a.conj() * b
+    # reverse DFT
+    c = numpy.fft.irfft(c)
+    # positive delays only
+    c = c[:size // 2]        
+    # normalize with the averages of a and b
+    c /= size * a_mean * b_mean
+    return c
+
+#==============================================================================
+# Lee un B64 y lo convierte en matriz. Voltear es para que se gire la matriz 
+# adecuadamente de los archivos simulador. Se necesita el paquete lfdfiles, se
+# instala mediante la promp de anaconda corriendo: pip install lfdfiles --user
+#==============================================================================
+def read_B64(Archivo,Voltear=True):
+    Read=lfd(Archivo)
+    Matriz=Read.asarray()
+    if Voltear==False:
+        return Matriz
+    if Voltear==True:
+        for i in range(len(Matriz)):
+            Matriz[i]=np.transpose(np.rot90(Matriz[i].copy(),-1))
+        return Matriz
+    else:
+        return print('Defina Voltear correctamente, usar True para archivos de simulacion')
+        
