@@ -82,8 +82,8 @@ def tau(R1,Frames,Size,Tiempo_pixel,Tiempo_retorno_linea=0,Tiempo_retorno_final=
 #==============================================================================
 # Abro el archivo y grafico.
 #==============================================================================
-Archivo=r'C:\Users\admin\Desktop\simulacion 20200526 1.b64'
-pCF_distance=2
+Archivo=r'C:\Users\admin\Desktop\tesis de licenciatura\simulaciones Sim\simulacion 20200713\20200713 11.b64'
+pCF_distance=4
 r0=np.array([10,10])
 x1,y1=np.array(puntos_correlacion(pCF_distance))
 Matriz=FCS.read_B64(Archivo)
@@ -109,15 +109,31 @@ fig = plt.figure()
 ax = Axes3D(fig)
 plt.ion()
 for i in range(len(spri)):
-    X =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(taus[0]))*x1[i]
-    Y =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(taus[0]))*y1[i]
+    X =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(taus[i]))*x1[i]
+    Y =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(taus[i]))*y1[i]
     # X =(taus[0])*x1[i]
     # Y =(taus[0])*y1[i]
     # X, Y = np.meshgrid(X, Y)
-    Z = np.array(spri[0])
+    Z = np.array(spri[i])
     ax.plot(X, Y, Z)
+    ax.set_xlabel('Dirección')
+    ax.set_ylabel('Dirección')
+    ax.set_zlabel('PCF')
+    ax.set_title('PCF distance=%s, R0=(%s,%s)' %(pCF_distance,r0[0],r0[1]),loc='right')
 plt.show()
 
 # from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
+
+plt.figure('PSF individual')
+plt.plot(np.linspace(0,len(G)-1,len(G))*tiempo_imagen,G,'.r',label='funcion mia')
+#plt.plot(np.linspace(0,len(G)-1,len(G))*tiempo_imagen,G*2,'.k',label='funcion mia x2')
+plt.plot(np.linspace(0,len(a)-1,len(a))*tiempo_imagen,a,'.b',label='funcion python')
+plt.plot(x,G_teo,'.g',label='funcion teorica python')
+plt.plot(x,G_teo2,'.k',label='funcion teorica')
+plt.xscale('log')
+plt.grid()
+plt.ylabel('ACF')
+plt.xlabel('tiempo (s)')
+plt.legend()
 
 
