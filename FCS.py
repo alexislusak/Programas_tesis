@@ -178,8 +178,9 @@ def corrlineal_fft(a, b):
 # Lee un B64 y lo convierte en matriz. Voltear es para que se gire la matriz 
 # adecuadamente de los archivos simulador. Se necesita el paquete lfdfiles, se
 # instala mediante la promp de anaconda corriendo: pip install lfdfiles --user
+# Size es un valor, se refiere al ancho de la matriz o al largo de la linea.
 # El archivo de cristofer falla por lo que lo modifique para que funcione para
-# imagenes menores a 128 pixeles. La forma de size es [frames,size,size]
+# imagenes menores a 128 pixeles. Aca la modificación
     # def _asarray(self,size=0):
     #     """Return intensity data as 1D, 2D, or 3D array of int16."""
     #     'Lo del size lo agrego porque no funciona para size <128 la forma es [frames,size,size]'
@@ -192,18 +193,40 @@ def corrlineal_fft(a, b):
     #         data = numpy.fromfile(self._fh, '<' + self.dtype.char, count=count)
     #         return data.reshape(*size)
 #==============================================================================
-def read_B64(Archivo,Size=0,Voltear=True):
+def read_B64(Archivo,Size=0,Voltear=True,Line=False):
     Read=lfd(Archivo)
-    Matriz=lfd.asarray(Read,size=Size)
-    if Voltear==False:
-        return Matriz
-    if Voltear==True:
-        for i in range(len(Matriz)):
-            Matriz[i]=np.transpose(np.rot90(Matriz[i].copy(),-1))
+    if Line==False:
+        if Size!=0:
+            Matriz=lfd.asarray(Read)
+            Puntos=len(Matriz[:,0,0])*len(Matriz[0,:,0])*len(Matriz[0,0,:])
+            Matriz=lfd.asarray(Read,[int(Puntos/Size**2),Size,Size])
+            if Voltear==False:
+                return Matriz
+            if Voltear==True:
+                for i in range(len(Matriz)):
+                    Matriz[i]=np.transpose(np.rot90(Matriz[i].copy(),-1))
+                return Matriz
+            else:
+                return print('Defina Voltear correctamente, usar True para archivos de simulacion')
+        if size==0:
+            Matriz=lfd.asarray(Read)
+            if Voltear==False:
+                return Matriz
+            if Voltear==True:
+                for i in range(len(Matriz)):
+                    Matriz[i]=np.transpose(np.rot90(Matriz[i].copy(),-1))
+                return Matriz
+            else:
+                return print('Defina Voltear correctamente, usar True para archivos de simulacion')
+    if Line == True:
+        Matriz=lfd.asarray(Read)
+        Puntos=len(Matriz[:,0,0])*len(Matriz[0,:,0])*len(Matriz[0,0,:])
+        Matriz=lfd.asarray(Read,[int(Puntos/Size),Size,1])
         return Matriz
     else:
-        return print('Defina Voltear correctamente, usar True para archivos de simulacion')
-
+        return print('Defina corectamente si es en modo line o no. True=si, False=no')
+        
+        
 #==============================================================================
 # Lee un archivo .lsm y devuelve la matriz de canal elegido. Canal 1 o Canal 2.
 #==============================================================================
@@ -212,3 +235,31 @@ def read_LSM(Archivo,Canal=1):
     ima= tif(Archivo)
     Matriz=tif.asarray(ima)
     return Matriz[0,:,Canal,:,:]
+
+
+#==============================================================================
+# Defino el promedio movil. El especial hace un promedio movil logaritmico.
+#==============================================================================  
+def moving_average(a, n=3,Especial=False) :
+    if Especial==False:
+        ret = np.cumsum(a, dtype=float)
+        ret[n:] = ret[n:] - ret[:-n]
+        return ret[n - 1:] / n
+    if Especial==True:
+        espacios= int(np.floor(np.log10(len(a))))
+        ret= np.cumsum(a, dtype=float)
+        ret0=ret
+        ret0[n:] = ret0[n:] - ret0[:-n]
+        ret0=ret0[n - 1:n+10-1] / n
+        for i in range(espacios):
+            ret1=np.cumsum(a, dtype=float)
+            n0=n+10**(i+1)
+            n1=n0+10**(i+2)
+            if n1>len(a):
+                n1=len(a)
+            ret1[n0:]= ret1[n0:] - ret1[:-n0]
+            ret1=ret1[n0 + int((10**(i+1)+10**(i))/2)-1:n1-1] / n0
+            ret0=np.append(ret0,ret1)
+        return ret0
+    else:
+        print('Especifique el modo Especial como True o False')
