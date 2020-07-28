@@ -56,7 +56,8 @@ def puntos_correlacion(R):
     return X,Y
 
 #==============================================================================
-# Calcula el esprite para el vector R1 posiciones a distancia R
+# Calcula el esprite para el vector R1 posiciones a distancia R de R0, 
+# R1= R0 + puntos_correlacion
 #==============================================================================
 def spriteseparada(Matriz,R0,R1):   
     P0=Matriz[:,R0[0],R0[1]]
@@ -75,7 +76,7 @@ def sprite(Matriz,R0,R1,Tiempo_pixel,Tiempo_retorno_linea=0,Tiempo_retorno_final
     Tau=[]
     for i in range(len(R1[0])):
         G.append(FCS.corrlineal_fft(P0,Matriz[:,R1[0][i],R1[1][i]]))
-        Tiempo_retrazo=(R1[0][i])*Tiempo_pixel+(R1[1][i])*(Tiempo_retorno_linea+Size*Tiempo_pixel)
+        Tiempo_retrazo=(R1[0][i]-R0[0])*Tiempo_pixel+(R1[1][i]-R0[1])*(Tiempo_retorno_linea+Size*Tiempo_pixel)
         Tau.append(np.linspace(0,int(Frames/2)-1,int(Frames/2))*Tiempo_imagen+Tiempo_retrazo)
     return np.array(G),np.array(Tau)
 
@@ -86,7 +87,7 @@ def PCF(Matriz,R0,R1,Tiempo_pixel,Tiempo_retorno_linea=0,Tiempo_retorno_final=0,
     if Tiempo_imagen==0:
         Tiempo_imagen=Tiempo_pixel*Size**2+Tiempo_retorno_linea*Size+Tiempo_retorno_final
     G=FCS.corrlineal_fft(P0,Matriz[:,R1[0],R1[1]])
-    Tiempo_retrazo=(R1[0])*Tiempo_pixel+(R1[1])*(Tiempo_retorno_linea+Size*Tiempo_pixel)
+    Tiempo_retrazo=(R1[0]-R0[0])*Tiempo_pixel+(R1[1]-R0[1])*(Tiempo_retorno_linea+Size*Tiempo_pixel)
     Tau=np.linspace(0,int(Frames/2)-1,int(Frames/2))*Tiempo_imagen+Tiempo_retrazo
     return np.array(G),np.array(Tau)  
             
