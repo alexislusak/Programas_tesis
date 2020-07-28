@@ -103,6 +103,10 @@ def tau(R1,Frames,Size,Tiempo_pixel,Tiempo_retorno_linea=0,Tiempo_retorno_final=
         Tau.append(np.linspace(0,Frames-1,Frames)*Tiempo_imagen+Tiempo_retrazo)
     return np.array(Tau)
 
+
+#==============================================================================
+# Defino el promedio movil. El especial hace un promedio movil logaritmico.
+#==============================================================================  
 def moving_average(a, n=3,Especial=False) :
     if Especial==False:
         ret = np.cumsum(a, dtype=float)
