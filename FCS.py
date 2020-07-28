@@ -7,6 +7,7 @@ Created on Sun Jun 28 01:51:20 2020
 import numpy as np
 import numpy.fft
 from lfdfiles import SimfcsB64 as lfd
+from lfdfiles import TiffFile as tif
 
 #==============================================================================
 # Con este programa podes extraer un pixel del huge vector. Ademas podes
@@ -177,10 +178,23 @@ def corrlineal_fft(a, b):
 # Lee un B64 y lo convierte en matriz. Voltear es para que se gire la matriz 
 # adecuadamente de los archivos simulador. Se necesita el paquete lfdfiles, se
 # instala mediante la promp de anaconda corriendo: pip install lfdfiles --user
+# El archivo de cristofer falla por lo que lo modifique para que funcione para
+# imagenes menores a 128 pixeles. La forma de size es [frames,size,size]
+    # def _asarray(self,size=0):
+    #     """Return intensity data as 1D, 2D, or 3D array of int16."""
+    #     'Lo del size lo agrego porque no funciona para size <128 la forma es [frames,size,size]'
+    #     if size==0:
+    #         count = product(self.shape)
+    #         data = numpy.fromfile(self._fh, '<' + self.dtype.char, count=count)
+    #         return data.reshape(*self.shape)
+    #     else:
+    #         count = product(size)
+    #         data = numpy.fromfile(self._fh, '<' + self.dtype.char, count=count)
+    #         return data.reshape(*size)
 #==============================================================================
-def read_B64(Archivo,Voltear=True):
+def read_B64(Archivo,Size=0,Voltear=True):
     Read=lfd(Archivo)
-    Matriz=Read.asarray()
+    Matriz=lfd.asarray(Read,size=Size)
     if Voltear==False:
         return Matriz
     if Voltear==True:
@@ -189,4 +203,12 @@ def read_B64(Archivo,Voltear=True):
         return Matriz
     else:
         return print('Defina Voltear correctamente, usar True para archivos de simulacion')
-        
+
+#==============================================================================
+# Lee un archivo .lsm y devuelve la matriz de canal elegido. Canal 1 o Canal 2.
+#==============================================================================
+def read_LSM(Archivo,Canal=1):
+    Canal=Canal-1
+    ima= tif(Archivo)
+    Matriz=tif.asarray(ima)
+    return Matriz[0,:,Canal,:,:]
