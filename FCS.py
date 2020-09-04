@@ -159,6 +159,8 @@ def corrlineal_fft(a, b):
     # subtract mean and pad with zeros to twice the size
     a_mean = a.mean()
     b_mean = b.mean()
+    if a_mean==0 or b_mean==0: #lo pongo para evitar problemas de infinitos al normalizar
+        return np.zeros(size//2)
     a = numpy.pad(a-a_mean, a.size//2, mode='constant')
     b = numpy.pad(b-b_mean, b.size//2, mode='constant')
     # forward DFT
@@ -208,7 +210,7 @@ def read_B64(Archivo,Size=0,Voltear=True,Line=False):
                 return Matriz
             else:
                 return print('Defina Voltear correctamente, usar True para archivos de simulacion')
-        if size==0:
+        if Size==0:
             Matriz=lfd.asarray(Read)
             if Voltear==False:
                 return Matriz
@@ -222,6 +224,7 @@ def read_B64(Archivo,Size=0,Voltear=True,Line=False):
         Matriz=lfd.asarray(Read)
         Puntos=len(Matriz[:,0,0])*len(Matriz[0,:,0])*len(Matriz[0,0,:])
         Matriz=lfd.asarray(Read,[int(Puntos/Size),Size,1])
+        # Matriz=lfd.asarray(Read,[int(Puntos/Size),1,Size])
         return Matriz
     else:
         return print('Defina corectamente si es en modo line o no. True=si, False=no')
@@ -242,23 +245,24 @@ def read_LSM(Archivo,Canal=1):
 #==============================================================================  
 def moving_average(a, n=3,Especial=False) :
     if Especial==False:
-        ret = np.cumsum(a, dtype=float)
+        ret = np.nancumsum(a, dtype=float)
         ret[n:] = ret[n:] - ret[:-n]
         return ret[n - 1:] / n
     if Especial==True:
         espacios= int(np.floor(np.log10(len(a))))
-        ret= np.cumsum(a, dtype=float)
+        ret= np.nancumsum(a, dtype=float)
         ret0=ret
         ret0[n:] = ret0[n:] - ret0[:-n]
-        ret0=ret0[n - 1:n+10-1] / n
+        ret0=ret0[n - 1:11] / n
         for i in range(espacios):
-            ret1=np.cumsum(a, dtype=float)
-            n0=n+10**(i+1)
+            ret1=np.nancumsum(a, dtype=float)
+            n0=10**(i+1)+1
             n1=n0+10**(i+2)
             if n1>len(a):
                 n1=len(a)
             ret1[n0:]= ret1[n0:] - ret1[:-n0]
-            ret1=ret1[n0 + int((10**(i+1)+10**(i))/2)-1:n1-1] / n0
+            # ret1=ret1[n0 + int((10**(i+1)+10**(i))/2)-1:n1-1] / n0
+            ret1=ret1[n0+int(n0/2)-1:n1-1] / n0
             ret0=np.append(ret0,ret1)
         return ret0
     else:

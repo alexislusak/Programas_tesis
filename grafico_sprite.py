@@ -28,9 +28,9 @@ Archivo6=r'C:\Users\admin\Desktop\tesis de licenciatura\simulaciones Sim\simulac
 #==============================================================================
 Archivo=Archivo4
 pCF_distance=8
-r0=np.array([15,15])
+r0=np.array([14,14])
 x1,y1=np.array(sprite.puntos_correlacion(pCF_distance))
-Matriz=FCS.read_B64(Archivo,Size=[8192*32,32,32])
+Matriz=FCS.read_B64(Archivo,Size=32)
 Frames=len(Matriz)
 Size=len(Matriz[0])
 Tiempo_pixel=1/10000000
@@ -49,24 +49,36 @@ taus=sprite.tau(R1=[x1,y1],Frames=len(spri[0]),Size=Size,Tiempo_pixel=Tiempo_pix
 #==============================================================================
 movil=5
 i=-1
+colores=True
+
 fig = plt.figure('sprite')
 ax = Axes3D(fig)
 plt.ion()
+mz=np.max(spri)
 for i in range(len(spri)):
     if movil ==0:
         X =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(taus[i]))*x1[i]
         Y =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(taus[i]))*y1[i]
         Z = np.array(spri[i])
     else:
-        X =(-np.log10(Tiempo_pixel*pCF_distance) +np.log10(moving_average(taus[i], n=movil)))*x1[i]
-        Y =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(moving_average(taus[i], n=movil)))*y1[i]
-        Z = np.array(moving_average(spri[i], n=movil))
-    ax.plot(X, Y, Z)
-    ax.set_xlabel('Dirección')
-    ax.set_ylabel('Dirección')
-    ax.set_zlabel('PCF')
-    ax.set_title('PCF distance=%s, R0=(%s,%s)' %(pCF_distance,r0[0],r0[1]),loc='right')
-plt.savefig(Archivo +' pcf %s sprite movil=%s.jpg' %(pCF_distance,movil), dpi=150)
+        X =(-np.log10(Tiempo_pixel*pCF_distance) +np.log10(FCS.moving_average(taus[i], n=movil, Especial=True)))*x1[i]
+        Y =(-np.log10(Tiempo_pixel*pCF_distance) + np.log10(FCS.moving_average(taus[i], n=movil, Especial=True)))*y1[i]
+        Z = np.array(FCS.moving_average(spri[i], n=movil, Especial=True))
+    if colores==True:
+        a=1
+        for i in range(2000):
+            if i==1000:
+                a=50
+            f=int((i-1000)*a+1000)
+            ax.plot(X[f:f+2], Y[f:f+2], Z[f:f+2], color = plt.cm.jet(Z[f]/mz))
+    else:
+        ax.plot(X, Y, Z)
+        
+ax.set_xlabel('Dirección')
+ax.set_ylabel('Dirección')
+ax.set_zlabel('PCF')
+ax.set_title('PCF distance=%s, R0=(%s,%s)' %(pCF_distance,r0[0],r0[1]),loc='right')
+plt.savefig(Archivo +' pcf %s sprite movilje=%s.jpg' %(pCF_distance,movil), dpi=150)
 plt.show()
 plt.close()
 
@@ -74,10 +86,10 @@ plt.figure('PSF individual')
 if movil ==0:
     plt.plot(taus[i],spri[i],'.r',label='PCF=%s' %(pCF_distance))
 else:
-    plt.plot(sprite.moving_average(taus[i],n=movil),sprite.moving_average(spri[i], n=movil),'.r',label='PCF=%s, movil=%s' %(pCF_distance,movil))
+    plt.plot(FCS.moving_average(taus[i],n=movil),FCS.moving_average(spri[i], n=movil),'.r',label='PCF=%s, movil=%s' %(pCF_distance,movil))
 plt.xscale('log')
-plt.ylim([-0.05,0.23])
-plt.xlim([10**(-4),20])
+# plt.ylim([-0.05,0.23])
+# plt.xlim([10**(-4),20])
 plt.grid()
 plt.ylabel('PCF')
 plt.xlabel('tau (s)')
