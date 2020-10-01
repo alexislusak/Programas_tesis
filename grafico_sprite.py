@@ -27,7 +27,7 @@ Archivo6=r'C:\Users\admin\Desktop\tesis de licenciatura\simulaciones Sim\simulac
 # Defino variables
 #==============================================================================
 Archivo=Archivo4
-pCF_distance=8
+pCF_distance=3
 r0=np.array([14,14])
 x1,y1=np.array(sprite.puntos_correlacion(pCF_distance))
 Matriz=FCS.read_B64(Archivo,Size=32)
@@ -47,7 +47,7 @@ taus=sprite.tau(R1=[x1,y1],Frames=len(spri[0]),Size=Size,Tiempo_pixel=Tiempo_pix
 # Grafico con un promedio movil de tanto, recomiendo usar el promedio movil 
 # especial. Con i controlo la esprite individual que grafico.
 #==============================================================================
-movil=5
+movil=3
 i=-1
 colores=True
 
@@ -86,14 +86,14 @@ plt.figure('PSF individual')
 if movil ==0:
     plt.plot(taus[i],spri[i],'.r',label='PCF=%s' %(pCF_distance))
 else:
-    plt.plot(FCS.moving_average(taus[i],n=movil),FCS.moving_average(spri[i], n=movil),'.r',label='PCF=%s, movil=%s' %(pCF_distance,movil))
+    plt.plot(FCS.moving_average(taus[i],n=movil,Especial=True),FCS.moving_average(spri[i], n=movil,Especial=True),'-r',label='PCF=%s, movil=%s' %(pCF_distance,movil))
 plt.xscale('log')
 # plt.ylim([-0.05,0.23])
 # plt.xlim([10**(-4),20])
 plt.grid()
-plt.ylabel('PCF')
-plt.xlabel('tau (s)')
-plt.legend()
-plt.savefig(Archivo +' pcf %s individual movil=%s.jpg' %(pCF_distance,movil), dpi=150)
+plt.ylabel('Correlación')
+plt.xlabel('Tiempo de correlación (s)')
+# plt.legend()
+# plt.savefig(Archivo +' pcf %s individual movil=%s.jpg' %(pCF_distance,movil), dpi=150)
 plt.show()
 plt.close()

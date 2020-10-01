@@ -223,8 +223,8 @@ def read_B64(Archivo,Size=0,Voltear=True,Line=False):
     if Line == True:
         Matriz=lfd.asarray(Read)
         Puntos=len(Matriz[:,0,0])*len(Matriz[0,:,0])*len(Matriz[0,0,:])
-        Matriz=lfd.asarray(Read,[int(Puntos/Size),Size,1])
-        # Matriz=lfd.asarray(Read,[int(Puntos/Size),1,Size])
+        # Matriz=lfd.asarray(Read,[int(Puntos/Size),Size,1])
+        Matriz=lfd.asarray(Read,[int(Puntos/Size),1,Size])
         return Matriz
     else:
         return print('Defina corectamente si es en modo line o no. True=si, False=no')
@@ -233,12 +233,14 @@ def read_B64(Archivo,Size=0,Voltear=True,Line=False):
 #==============================================================================
 # Lee un archivo .lsm y devuelve la matriz de canal elegido. Canal 1 o Canal 2.
 #==============================================================================
-def read_LSM(Archivo,Canal=1):
+def read_LSM(Archivo,Canal=1,line=False):
     Canal=Canal-1
     ima= tif(Archivo)
     Matriz=tif.asarray(ima)
-    return Matriz[0,:,Canal,:,:]
-
+    if line==True:
+        return Matriz[0,:,Canal,:,:]
+    else:
+        return Matriz[:,0,Canal,:,:]
 
 #==============================================================================
 # Defino el promedio movil. El especial hace un promedio movil logaritmico.
